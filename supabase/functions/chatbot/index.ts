@@ -28,6 +28,7 @@ serve(async (req) => {
     }
 
     if (!openAIApiKey) {
+      console.error('OpenAI API key not found in environment');
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not configured' }),
         { 
@@ -37,7 +38,23 @@ serve(async (req) => {
       );
     }
 
+    console.log('OpenAI API key found, length:', openAIApiKey.length);
     console.log('Processing message:', message);
+
+    const openAIPayload = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a helpful AI assistant for ClassBridge, an education platform. Help students and teachers with their educational needs. Be concise, accurate, and supportive in your responses.'
+        },
+        { role: 'user', content: message }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+    };
+
+    console.log('Sending request to OpenAI with payload:', JSON.stringify(openAIPayload));
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -45,19 +62,11 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a helpful AI assistant for ClassBridge, an education platform. Help students and teachers with their educational needs. Be concise, accurate, and supportive in your responses.'
-          },
-          { role: 'user', content: message }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
+      body: JSON.stringify(openAIPayload),
     });
+
+    console.log('OpenAI response status:', response.status);
+    console.log('OpenAI response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       console.error('OpenAI API error:', response.status, response.statusText);
@@ -65,7 +74,10 @@ serve(async (req) => {
       console.error('Error details:', errorData);
       
       return new Response(
-        JSON.stringify({ error: 'Failed to get response from AI' }),
+        JSON.stringify({ 
+          error: 'Failed to get response from AI',
+          details: `OpenAI API returned ${response.status}: ${errorData}`
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
