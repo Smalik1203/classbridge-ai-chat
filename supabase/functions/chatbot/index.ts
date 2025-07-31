@@ -52,7 +52,7 @@ serve(async (req) => {
         { role: 'user', content: message }
       ],
       max_tokens: 1000,
-      temperature: 0.7,
+      temperature: 0.7
     };
 
     console.log('Sending request to OpenAI with payload:', JSON.stringify(openAIPayload));
