@@ -29,6 +29,7 @@ serve(async (req) => {
 
     if (!openAIApiKey) {
       console.error('OpenAI API key not found in environment');
+      console.error('Available env keys:', Object.keys(Deno.env.toObject()));
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not configured' }),
         { 
